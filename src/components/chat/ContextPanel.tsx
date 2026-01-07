@@ -1,4 +1,4 @@
-import { Brain, Activity, Clock, MessageSquare, Sparkles } from "lucide-react";
+import { Brain, Database, ListChecks, Sparkles } from "lucide-react";
 
 interface ContextPanelProps {
   sessionTopic: string;
@@ -15,11 +15,31 @@ export function ContextPanel({
 }: ContextPanelProps) {
   return (
     <aside className="w-72 border-l border-border bg-surface p-4 hidden xl:block overflow-y-auto">
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Session info header */}
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-semibold text-foreground">Context Panel</h3>
+        </div>
+
+        {/* Memory Status Compact */}
+        <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
+          <div className="flex items-center gap-2 mb-2">
+            <Brain className="h-4 w-4 text-primary" />
+            <span className="text-xs font-semibold text-foreground">AI Memory</span>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 text-xs">
+              <Database className="h-3 w-3 text-primary" />
+              <span className="text-muted-foreground">Long-term preferences</span>
+              <span className="ml-auto text-primary font-medium">Stored</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <ListChecks className="h-3 w-3 text-primary" />
+              <span className="text-muted-foreground">Active task context</span>
+              <span className="ml-auto text-primary font-medium">3 tasks</span>
+            </div>
+          </div>
         </div>
 
         {/* Current topic */}
@@ -36,7 +56,6 @@ export function ContextPanel({
         {/* Detected mood */}
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            <Activity className="h-3.5 w-3.5" />
             Detected Mood
           </div>
           <div className="bg-background rounded-lg p-3 border border-border">
@@ -52,8 +71,7 @@ export function ContextPanel({
 
         {/* Recent activity */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            <Clock className="h-3.5 w-3.5" />
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Recent Activity
           </div>
           <div className="bg-background rounded-lg p-3 border border-border space-y-2">
@@ -72,8 +90,7 @@ export function ContextPanel({
 
         {/* Session stats */}
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            <MessageSquare className="h-3.5 w-3.5" />
+          <div className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Session Stats
           </div>
           <div className="grid grid-cols-2 gap-2">
@@ -82,19 +99,19 @@ export function ContextPanel({
               <p className="text-xs text-muted-foreground">Messages</p>
             </div>
             <div className="bg-background rounded-lg p-3 border border-border text-center">
-              <p className="text-lg font-semibold text-foreground">Active</p>
+              <p className="text-lg font-semibold text-primary">Active</p>
               <p className="text-xs text-muted-foreground">Status</p>
             </div>
           </div>
         </div>
 
         {/* Adaptation note */}
-        <div className="bg-primary/5 rounded-lg p-3 border border-primary/20">
+        <div className="bg-surface rounded-lg p-3 border border-border">
           <p className="text-xs text-primary font-medium mb-1">
-            🧠 Adaptive Responses
+            🧠 Adaptive Learning
           </p>
           <p className="text-xs text-muted-foreground">
-            The assistant adapts its tone and suggestions based on your detected mood and context.
+            Your assistant learns from interactions and adapts responses based on your preferences and context.
           </p>
         </div>
       </div>
