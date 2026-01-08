@@ -77,6 +77,15 @@ export function ChatWindow({ messages, onSendMessage, isLoading }: ChatWindowPro
     <div className="flex h-full bg-background">
       {/* Main chat area */}
       <div className="flex-1 flex flex-col min-w-0">
+        {/* Welcome banner */}
+        <div className="px-4 md:px-6 pt-4 md:pt-6">
+          <div className="max-w-4xl mx-auto bg-primary/5 border border-primary/20 rounded-xl px-4 py-3">
+            <p className="text-sm text-center text-foreground">
+              <span className="font-medium">Welcome!</span> Ask anything or use a quick action below.
+            </p>
+          </div>
+        </div>
+
         {/* Chat messages area */}
         <div
           ref={scrollRef}
