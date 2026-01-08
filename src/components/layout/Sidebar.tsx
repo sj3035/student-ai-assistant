@@ -1,4 +1,4 @@
-import { LayoutDashboard, MessageSquare, CheckSquare, User, Settings, X } from "lucide-react";
+import { LayoutDashboard, MessageSquare, CheckSquare, User, Settings, X, Lightbulb, BookOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -12,6 +12,8 @@ interface SidebarProps {
 const menuItems = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { id: "chat", label: "Chat Assistant", icon: MessageSquare },
+  { id: "prompt-tutorial", label: "Prompt Writing", icon: Lightbulb },
+  { id: "explain-simply", label: "Explain It Simply", icon: BookOpen },
   { id: "tasks", label: "Tasks & Reminders", icon: CheckSquare },
   { id: "profile", label: "User Profile", icon: User },
   { id: "settings", label: "Settings", icon: Settings },
