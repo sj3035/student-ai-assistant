@@ -10,9 +10,10 @@ interface ChatInputProps {
 }
 
 const quickActions = [
-  { label: "Explain Concept", prompt: "Can you explain this concept to me in simple terms?" },
-  { label: "Plan My Study", prompt: "Help me create a study plan for my upcoming exams" },
   { label: "Summarize Notes", prompt: "Summarize my recent notes into key points" },
+  { label: "Plan My Study", prompt: "Help me create a study plan for my upcoming exams" },
+  { label: "Generate Quiz", prompt: "Generate a quiz to test my understanding of the current topic" },
+  { label: "Explain Concept", prompt: "Can you explain this concept to me in simple terms?" },
 ];
 
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
