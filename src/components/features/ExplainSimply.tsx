@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Lightbulb, Sparkles, BookOpen, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface ExplainOption {
   id: string;
@@ -42,6 +43,8 @@ interface ExplainSimplyProps {
   onExplain?: (topic: string, style: string, adaptToBackground: boolean) => void;
 }
 
+const EXPLAIN_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/explain`;
+
 export function ExplainSimply({ 
   userKnowledgeLevel = "intermediate", 
   userDomain = "general",
@@ -53,33 +56,89 @@ export function ExplainSimply({
   const [isLoading, setIsLoading] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
 
-  const handleExplain = async () => {
+  const streamExplanation = async (action: "explain" | "simpler" | "examples" = "explain") => {
     if (!topic.trim() || !selectedOption) return;
 
     setIsLoading(true);
-    
-    // Simulate AI response - in production, this would call the actual AI
-    setTimeout(() => {
-      const option = explainOptions.find((o) => o.id === selectedOption);
-      const adaptedContext = adaptToBackground
-        ? `As a ${userKnowledgeLevel} in ${userDomain}, `
-        : "";
-      
-      setExplanation(
-        `${adaptedContext}here's an explanation of "${topic}":\n\n` +
-        `This is where the AI-generated explanation would appear based on your selected style: "${option?.label}". ` +
-        `The explanation would be tailored to your ${userKnowledgeLevel} knowledge level ` +
-        `and ${userDomain} background.\n\n` +
-        `In the full implementation, this would use Lovable AI to generate contextual, ` +
-        `personalized explanations based on your preferences.`
-      );
-      setIsLoading(false);
-      
+    if (action === "explain") {
+      setExplanation(null);
+    }
+
+    try {
+      const response = await fetch(EXPLAIN_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          topic,
+          style: selectedOption,
+          adaptToBackground,
+          userKnowledgeLevel: adaptToBackground ? userKnowledgeLevel : undefined,
+          userDomain: adaptToBackground ? userDomain : undefined,
+          action,
+          previousExplanation: action !== "explain" ? explanation : undefined,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to get explanation");
+      }
+
+      if (!response.body) throw new Error("No response body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let textBuffer = "";
+      let explanationText = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        textBuffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+          let line = textBuffer.slice(0, newlineIndex);
+          textBuffer = textBuffer.slice(newlineIndex + 1);
+
+          if (line.endsWith("\r")) line = line.slice(0, -1);
+          if (line.startsWith(":") || line.trim() === "") continue;
+          if (!line.startsWith("data: ")) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === "[DONE]") break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (content) {
+              explanationText += content;
+              setExplanation(explanationText);
+            }
+          } catch {
+            textBuffer = line + "\n" + textBuffer;
+            break;
+          }
+        }
+      }
+
       if (onExplain) {
         onExplain(topic, selectedOption, adaptToBackground);
       }
-    }, 1500);
+    } catch (error) {
+      console.error("Explain error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to get explanation");
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const handleExplain = () => streamExplanation("explain");
+  const handleSimpler = () => streamExplanation("simpler");
+  const handleMoreExamples = () => streamExplanation("examples");
 
   const handleReset = () => {
     setTopic("");
@@ -200,16 +259,17 @@ export function ExplainSimply({
               </div>
               <div className="p-4 rounded-xl bg-muted/50 text-sm leading-relaxed whitespace-pre-wrap">
                 {explanation}
+                {isLoading && <span className="inline-block w-2 h-4 bg-primary/50 animate-pulse ml-1" />}
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleReset} className="flex-1">
+                <Button variant="outline" size="sm" onClick={handleReset} className="flex-1" disabled={isLoading}>
                   New Explanation
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  Make Simpler
+                <Button variant="outline" size="sm" onClick={handleSimpler} className="flex-1" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Make Simpler"}
                 </Button>
-                <Button variant="outline" size="sm" className="flex-1">
-                  Add Examples
+                <Button variant="outline" size="sm" onClick={handleMoreExamples} className="flex-1" disabled={isLoading}>
+                  {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Add Examples"}
                 </Button>
               </div>
             </div>

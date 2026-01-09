@@ -3,8 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Lightbulb, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, BookOpen, Code, Briefcase } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Lightbulb, ArrowRight, ArrowLeft, CheckCircle2, Sparkles, BookOpen, Code, Briefcase, Loader2, Wand2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 interface TutorialStep {
   id: string;
@@ -80,6 +83,8 @@ const domainExamples: Record<string, PromptExample[]> = {
   ],
 };
 
+const IMPROVE_PROMPT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/improve-prompt`;
+
 interface PromptTutorialProps {
   userDomain?: string;
 }
@@ -87,9 +92,51 @@ interface PromptTutorialProps {
 export function PromptTutorial({ userDomain = "general" }: PromptTutorialProps) {
   const [currentStep, setCurrentStep] = useState(0);
   const [isExpanded, setIsExpanded] = useState(false);
+  const [userPrompt, setUserPrompt] = useState("");
+  const [improvedPrompt, setImprovedPrompt] = useState<string | null>(null);
+  const [isImproving, setIsImproving] = useState(false);
 
   const domain = userDomain || "general";
   const examples = domainExamples[domain] || domainExamples.general;
+
+  const handleImprovePrompt = async () => {
+    if (!userPrompt.trim()) return;
+
+    setIsImproving(true);
+    setImprovedPrompt(null);
+
+    try {
+      const response = await fetch(IMPROVE_PROMPT_URL, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        },
+        body: JSON.stringify({
+          prompt: userPrompt,
+          userDomain: domain,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || "Failed to improve prompt");
+      }
+
+      const data = await response.json();
+      setImprovedPrompt(data.improvedPrompt);
+    } catch (error) {
+      console.error("Improve prompt error:", error);
+      toast.error(error instanceof Error ? error.message : "Failed to improve prompt");
+    } finally {
+      setIsImproving(false);
+    }
+  };
+
+  const handleReset = () => {
+    setUserPrompt("");
+    setImprovedPrompt(null);
+  };
 
   const steps: TutorialStep[] = [
     {
@@ -188,14 +235,77 @@ export function PromptTutorial({ userDomain = "general" }: PromptTutorialProps) 
     },
     {
       id: "practice",
-      title: "Ready to Practice!",
+      title: "Practice: Improve Your Prompt",
+      content: (
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-2">
+            <Wand2 className="h-5 w-5 text-primary" />
+            <span className="font-medium">AI-Powered Prompt Improver</span>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Write a prompt and let AI suggest improvements based on what you've learned.
+          </p>
+          
+          <div className="space-y-2">
+            <Label htmlFor="user-prompt" className="text-sm">Your prompt:</Label>
+            <Textarea
+              id="user-prompt"
+              placeholder="Type a prompt you'd like to improve..."
+              value={userPrompt}
+              onChange={(e) => setUserPrompt(e.target.value)}
+              className="resize-none h-20"
+            />
+          </div>
+
+          {improvedPrompt && (
+            <div className="space-y-2">
+              <Label className="text-sm flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-primary" />
+                Improved version:
+              </Label>
+              <div className="p-3 rounded-lg bg-primary/10 text-sm">
+                {improvedPrompt}
+              </div>
+            </div>
+          )}
+
+          <div className="flex gap-2">
+            <Button
+              onClick={handleImprovePrompt}
+              disabled={!userPrompt.trim() || isImproving}
+              className="flex-1"
+            >
+              {isImproving ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Improving...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="h-4 w-4 mr-2" />
+                  Improve My Prompt
+                </>
+              )}
+            </Button>
+            {improvedPrompt && (
+              <Button variant="outline" onClick={handleReset}>
+                Try Another
+              </Button>
+            )}
+          </div>
+        </div>
+      ),
+    },
+    {
+      id: "complete",
+      title: "You're All Set!",
       content: (
         <div className="text-center space-y-4">
           <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
             <Sparkles className="h-8 w-8 text-primary" />
           </div>
           <div>
-            <h3 className="font-semibold text-lg">You're all set!</h3>
+            <h3 className="font-semibold text-lg">Tutorial Complete!</h3>
             <p className="text-sm text-muted-foreground mt-1">
               Now you know how to write effective prompts. Start chatting with your AI assistant and put these tips into practice!
             </p>
