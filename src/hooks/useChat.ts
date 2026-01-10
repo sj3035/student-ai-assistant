@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { useAuth } from "./useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
@@ -17,6 +17,12 @@ export function useChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+  const userIdRef = useRef<string | undefined>(user?.id);
+
+  // Keep ref in sync
+  useEffect(() => {
+    userIdRef.current = user?.id;
+  }, [user?.id]);
 
   // Load chat history on mount
   useEffect(() => {
@@ -57,14 +63,15 @@ export function useChat() {
     loadHistory();
   }, [user]);
 
-  const saveMessage = async (role: "user" | "assistant", content: string) => {
-    if (!user) return null;
+  const saveMessage = useCallback(async (role: "user" | "assistant", content: string): Promise<{ id: string } | null> => {
+    const userId = userIdRef.current;
+    if (!userId) return null;
 
     try {
       const { data, error } = await supabase
         .from("chat_messages")
         .insert({
-          user_id: user.id,
+          user_id: userId,
           role,
           content,
         })
@@ -77,7 +84,7 @@ export function useChat() {
       console.error("Error saving message:", error);
       return null;
     }
-  };
+  }, []);
 
   const sendMessage = useCallback(async (content: string) => {
     const userMessage: Message = {
@@ -97,7 +104,7 @@ export function useChat() {
     }
 
     let assistantContent = "";
-    let assistantMessageId = crypto.randomUUID();
+    const assistantMessageId = crypto.randomUUID();
 
     const updateAssistant = (chunk: string) => {
       assistantContent += chunk;
@@ -120,7 +127,14 @@ export function useChat() {
     };
 
     try {
-      const chatMessages = [...messages, userMessage].map(m => ({
+      const currentMessages = await new Promise<Message[]>(resolve => {
+        setMessages(prev => {
+          resolve(prev);
+          return prev;
+        });
+      });
+
+      const chatMessages = currentMessages.map(m => ({
         role: m.role,
         content: m.content,
       }));
@@ -190,8 +204,8 @@ export function useChat() {
 
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) updateAssistant(content);
+            const chunkContent = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (chunkContent) updateAssistant(chunkContent);
           } catch {
             textBuffer = line + "\n" + textBuffer;
             break;
@@ -210,8 +224,8 @@ export function useChat() {
           if (jsonStr === "[DONE]") continue;
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content as string | undefined;
-            if (content) updateAssistant(content);
+            const chunkContent = parsed.choices?.[0]?.delta?.content as string | undefined;
+            if (chunkContent) updateAssistant(chunkContent);
           } catch { /* ignore */ }
         }
       }
@@ -237,10 +251,11 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, profile, user]);
+  }, [profile, saveMessage]);
 
   const clearChat = useCallback(async () => {
-    if (!user) {
+    const userId = userIdRef.current;
+    if (!userId) {
       setMessages([]);
       return;
     }
@@ -249,7 +264,7 @@ export function useChat() {
       const { error } = await supabase
         .from("chat_messages")
         .delete()
-        .eq("user_id", user.id);
+        .eq("user_id", userId);
 
       if (error) throw error;
       setMessages([]);
@@ -261,7 +276,7 @@ export function useChat() {
         variant: "destructive",
       });
     }
-  }, [user]);
+  }, []);
 
   return { messages, isLoading, isLoadingHistory, sendMessage, clearChat };
 }
