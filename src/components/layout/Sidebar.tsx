@@ -1,6 +1,8 @@
-import { LayoutDashboard, MessageSquare, CheckSquare, User, Settings, X, Lightbulb, BookOpen } from "lucide-react";
+import { LayoutDashboard, MessageSquare, CheckSquare, User, Settings, X, Lightbulb, BookOpen, LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useNavigate } from "react-router-dom";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -20,6 +22,14 @@ const menuItems = [
 ];
 
 export function Sidebar({ isOpen, onClose, activeItem, onItemClick }: SidebarProps) {
+  const { profile, signOut } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/login");
+  };
+
   return (
     <>
       {/* Mobile overlay */}
@@ -77,13 +87,28 @@ export function Sidebar({ isOpen, onClose, activeItem, onItemClick }: SidebarPro
           <div className="p-4 border-t border-sidebar-border">
             <div className="flex items-center gap-3 px-3 py-2">
               <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-                <span className="text-sm font-medium text-muted-foreground">S</span>
+                <span className="text-sm font-medium text-muted-foreground">
+                  {profile?.name?.charAt(0)?.toUpperCase() || profile?.email?.charAt(0)?.toUpperCase() || "U"}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">Student</p>
-                <p className="text-xs text-muted-foreground truncate">student@university.edu</p>
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  {profile?.name || "User"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {profile?.email || ""}
+                </p>
               </div>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleLogout}
+              className="w-full mt-2 justify-start gap-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+            >
+              <LogOut className="h-4 w-4" />
+              Sign out
+            </Button>
           </div>
         </div>
       </aside>
