@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "./useAuth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 
 export interface Message {
@@ -12,9 +13,71 @@ export interface Message {
 const CHAT_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`;
 
 export function useChat() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
+
+  // Load chat history on mount
+  useEffect(() => {
+    if (!user) {
+      setIsLoadingHistory(false);
+      return;
+    }
+
+    const loadHistory = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("chat_messages")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: true });
+
+        if (error) throw error;
+
+        if (data) {
+          const loadedMessages: Message[] = data.map((msg) => ({
+            id: msg.id,
+            role: msg.role as "user" | "assistant",
+            content: msg.content,
+            timestamp: new Date(msg.created_at).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            }),
+          }));
+          setMessages(loadedMessages);
+        }
+      } catch (error) {
+        console.error("Error loading chat history:", error);
+      } finally {
+        setIsLoadingHistory(false);
+      }
+    };
+
+    loadHistory();
+  }, [user]);
+
+  const saveMessage = async (role: "user" | "assistant", content: string) => {
+    if (!user) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from("chat_messages")
+        .insert({
+          user_id: user.id,
+          role,
+          content,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    } catch (error) {
+      console.error("Error saving message:", error);
+      return null;
+    }
+  };
 
   const sendMessage = useCallback(async (content: string) => {
     const userMessage: Message = {
@@ -27,7 +90,14 @@ export function useChat() {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    // Save user message to database
+    const savedUserMsg = await saveMessage("user", content);
+    if (savedUserMsg) {
+      userMessage.id = savedUserMsg.id;
+    }
+
     let assistantContent = "";
+    let assistantMessageId = crypto.randomUUID();
 
     const updateAssistant = (chunk: string) => {
       assistantContent += chunk;
@@ -41,7 +111,7 @@ export function useChat() {
           );
         }
         return [...prev, {
-          id: crypto.randomUUID(),
+          id: assistantMessageId,
           role: "assistant" as const,
           content: assistantContent,
           timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
@@ -145,6 +215,16 @@ export function useChat() {
           } catch { /* ignore */ }
         }
       }
+
+      // Save assistant message to database after streaming completes
+      if (assistantContent) {
+        const savedAssistantMsg = await saveMessage("assistant", assistantContent);
+        if (savedAssistantMsg) {
+          setMessages(prev => prev.map(m => 
+            m.id === assistantMessageId ? { ...m, id: savedAssistantMsg.id } : m
+          ));
+        }
+      }
     } catch (error) {
       console.error("Chat error:", error);
       if (!assistantContent) {
@@ -157,11 +237,31 @@ export function useChat() {
     } finally {
       setIsLoading(false);
     }
-  }, [messages, profile]);
+  }, [messages, profile, user]);
 
-  const clearChat = useCallback(() => {
-    setMessages([]);
-  }, []);
+  const clearChat = useCallback(async () => {
+    if (!user) {
+      setMessages([]);
+      return;
+    }
 
-  return { messages, isLoading, sendMessage, clearChat };
+    try {
+      const { error } = await supabase
+        .from("chat_messages")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+      setMessages([]);
+    } catch (error) {
+      console.error("Error clearing chat:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear chat history.",
+        variant: "destructive",
+      });
+    }
+  }, [user]);
+
+  return { messages, isLoading, isLoadingHistory, sendMessage, clearChat };
 }
