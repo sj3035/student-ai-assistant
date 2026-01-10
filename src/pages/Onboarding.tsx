@@ -115,8 +115,10 @@ export default function Onboarding() {
         }
 
         setShowComplete(true);
-        setTimeout(() => {
-          navigate("/");
+        // Sign out and redirect to login so they can log in with personalized experience
+        setTimeout(async () => {
+          await supabase.auth.signOut();
+          navigate("/login");
         }, 2500);
       } catch (error: any) {
         toast({
@@ -145,7 +147,7 @@ export default function Onboarding() {
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">You're all set!</h1>
           <p className="text-muted-foreground max-w-sm mx-auto">
-            Your assistant is now personalized based on your preferences. Redirecting to your dashboard...
+            Your AI assistant has been personalized for you. Redirecting to login...
           </p>
         </div>
       </div>
