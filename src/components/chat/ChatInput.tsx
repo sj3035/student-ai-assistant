@@ -10,10 +10,10 @@ interface ChatInputProps {
 }
 
 const quickActions = [
-  { label: "Summarize Notes", prompt: "Summarize my recent notes into key points" },
-  { label: "Plan My Study", prompt: "Help me create a study plan for my upcoming exams" },
-  { label: "Generate Quiz", prompt: "Generate a quiz to test my understanding of the current topic" },
-  { label: "Explain Concept", prompt: "Can you explain this concept to me in simple terms?" },
+  { label: "Explain a concept", prompt: "Can you explain a concept to me? I'd like to understand it clearly based on my knowledge level." },
+  { label: "Plan my study", prompt: "Help me create a personalized study plan. Consider my goals and learning style." },
+  { label: "Summarize content", prompt: "Please summarize the following content into clear, digestible key points:" },
+  { label: "Generate examples", prompt: "Generate practical examples to help me understand this better. Use examples appropriate for my level." },
 ];
 
 export function ChatInput({ onSend, disabled }: ChatInputProps) {

@@ -14,10 +14,15 @@ interface UserProfile {
 }
 
 function buildSystemPrompt(profile: UserProfile | null): string {
-  let basePrompt = `You are a personalized AI study assistant designed for students. You are helpful, encouraging, and focused on learning outcomes.`;
+  let basePrompt = `You are MindForge, a personalized AI study assistant. Your core principles:
+- CLARITY over verbosity: Be concise and direct
+- NEVER assume technical knowledge beyond the user's stated level
+- Adapt your tone, language complexity, and explanation depth to the user
+- Be encouraging and focused on learning outcomes
+- Use the user's preferred learning style`;
 
   if (!profile) {
-    return basePrompt + ` Provide clear, balanced explanations suitable for a general audience.`;
+    return basePrompt + `\n\nNo personalization data available. Provide clear, accessible explanations suitable for a general audience. Avoid jargon and technical terms unless necessary.`;
   }
 
   // Adapt based on primary purpose
