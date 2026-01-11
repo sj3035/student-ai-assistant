@@ -1,5 +1,6 @@
-import { Menu, Sparkles } from "lucide-react";
+import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import mindForgeLogo from "@/assets/mindforge-logo.png";
 
 interface HeaderProps {
   onMenuClick: () => void;
@@ -18,10 +19,15 @@ export function Header({ onMenuClick }: HeaderProps) {
           <Menu className="h-5 w-5" />
         </Button>
         <div className="flex items-center gap-2">
-          <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-primary-foreground" />
+          <img 
+            src={mindForgeLogo} 
+            alt="MindForge Logo" 
+            className="h-8 w-8 object-contain"
+          />
+          <div className="flex flex-col">
+            <span className="font-semibold text-foreground leading-tight">MindForge</span>
+            <span className="text-[10px] text-muted-foreground leading-tight">Think. Build. Evolve.</span>
           </div>
-          <span className="font-semibold text-foreground">Personal AI Assistant</span>
         </div>
       </div>
       <div className="flex items-center gap-2">

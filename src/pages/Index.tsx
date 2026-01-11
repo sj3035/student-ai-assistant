@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Header } from "@/components/layout/Header";
+import { Footer } from "@/components/layout/Footer";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { ChatWindow } from "@/components/chat/ChatWindow";
 import { DashboardView } from "@/components/views/DashboardView";
@@ -64,7 +65,10 @@ const Index = () => {
           activeItem={activeView}
           onItemClick={setActiveView}
         />
-        <main className="flex-1 overflow-hidden">{renderContent()}</main>
+        <main className="flex-1 flex flex-col overflow-hidden">
+          <div className="flex-1 overflow-hidden">{renderContent()}</div>
+          <Footer />
+        </main>
       </div>
     </div>
   );

@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import mindForgeLogo from "@/assets/mindforge-logo.png";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -50,11 +51,13 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-primary/10 mb-4">
-            <Sparkles className="h-7 w-7 text-primary" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">AI Study Assistant</h1>
-          <p className="text-muted-foreground mt-1">Your personalized learning companion</p>
+          <img 
+            src={mindForgeLogo} 
+            alt="MindForge Logo" 
+            className="h-16 w-16 mx-auto mb-4 object-contain"
+          />
+          <h1 className="text-2xl font-bold text-foreground">MindForge</h1>
+          <p className="text-muted-foreground mt-1">Think. Build. Evolve.</p>
         </div>
 
         <Card className="border-border/50 shadow-lg">

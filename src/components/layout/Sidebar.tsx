@@ -50,7 +50,7 @@ export function Sidebar({ isOpen, onClose, activeItem, onItemClick }: SidebarPro
         <div className="flex flex-col h-full">
           {/* Mobile header */}
           <div className="flex items-center justify-between p-4 lg:hidden border-b border-sidebar-border">
-            <span className="font-semibold text-sidebar-foreground">Menu</span>
+            <span className="font-semibold text-sidebar-foreground">MindForge</span>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="h-5 w-5" />
             </Button>
