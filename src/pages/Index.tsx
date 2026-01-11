@@ -30,13 +30,16 @@ const Index = () => {
         return <SettingsView />;
       case "prompt-tutorial":
         return (
-          <div className="p-6 max-w-2xl mx-auto">
-            <PromptTutorial userDomain={profile?.primary_purpose || "general"} />
+          <div className="p-6 max-w-2xl mx-auto overflow-auto h-full">
+            <PromptTutorial 
+              userDomain={profile?.primary_purpose || "general"} 
+              userKnowledgeLevel={profile?.knowledge_level || "intermediate"}
+            />
           </div>
         );
       case "explain-simply":
         return (
-          <div className="p-6 max-w-2xl mx-auto">
+          <div className="p-6 max-w-2xl mx-auto overflow-auto h-full">
             <ExplainSimply 
               userKnowledgeLevel={profile?.knowledge_level || "intermediate"}
               userDomain={profile?.primary_purpose || "general"}

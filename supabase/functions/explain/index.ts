@@ -16,33 +16,43 @@ interface ExplainRequest {
 }
 
 function buildSystemPrompt(request: ExplainRequest): string {
-  let prompt = `You are an expert educator who excels at explaining complex topics simply. Your goal is to make concepts accessible and understandable.`;
+  let prompt = `You are MindForge's explanation assistant. Your purpose is to make any topic understandable. Be clear, direct, and well-structured.`;
 
   // Adapt based on style
-  if (request.style === "new") {
-    prompt += ` Explain as if the user is completely new to this topic. Use simple, everyday language and avoid all jargon. Start with the absolute basics.`;
-  } else if (request.style === "minimal") {
-    prompt += ` Use minimal technical terms. Focus on the core idea and make it accessible to anyone.`;
-  } else if (request.style === "examples") {
-    prompt += ` Lead with real-world examples and analogies. Make abstract concepts concrete through practical scenarios.`;
+  switch (request.style) {
+    case "new":
+      prompt += ` STYLE: Explain like I'm completely new. Start from absolute basics, use everyday language, define every term, build concepts step by step.`;
+      break;
+    case "analogy":
+      prompt += ` STYLE: Use real-world analogies. Center explanations around relatable comparisons from everyday life (cooking, driving, sports). Make analogies the main teaching tool.`;
+      break;
+    case "minimal":
+      prompt += ` STYLE: Avoid technical jargon. Use plain everyday words only. If a technical term is unavoidable, define it immediately. Focus on "what it does" not "what it's called".`;
+      break;
+    case "technical":
+      prompt += ` STYLE: Increase technical depth. Provide comprehensive explanations with proper terminology. Include nuances, edge cases, and connections to related concepts.`;
+      break;
   }
 
-  // Adapt to user background if enabled
+  // Adapt to user background
   if (request.adaptToBackground && request.userKnowledgeLevel) {
-    if (request.userKnowledgeLevel === "beginner") {
-      prompt += ` The user is a beginner, so keep everything extremely simple and provide lots of context.`;
-    } else if (request.userKnowledgeLevel === "intermediate") {
-      prompt += ` The user has intermediate knowledge, so you can build on some assumed basics.`;
-    } else if (request.userKnowledgeLevel === "advanced") {
-      prompt += ` The user is advanced, so focus on depth and nuance while still being clear.`;
-    }
+    const levels: Record<string, string> = {
+      beginner: ` USER LEVEL: Beginner - Use extremely simple language, many everyday examples, explain why things matter.`,
+      intermediate: ` USER LEVEL: Intermediate - Balance accessibility with depth, can reference common concepts.`,
+      advanced: ` USER LEVEL: Advanced - Can use technical language, focus on nuances and deeper insights.`,
+      expert: ` USER LEVEL: Expert - Assume strong foundations, focus on cutting-edge details and subtleties.`,
+    };
+    prompt += levels[request.userKnowledgeLevel] || "";
   }
 
   if (request.adaptToBackground && request.userDomain) {
-    prompt += ` The user's primary domain is ${request.userDomain}, so use relevant examples from that field when possible.`;
+    const domains: Record<string, string> = {
+      studying: ` CONTEXT: Student - Frame in learning terms, include memory aids.`,
+      programming: ` CONTEXT: Developer - Can use programming analogies, appreciate logical structure.`,
+      general: ` CONTEXT: General user - Use universally relatable examples.`,
+    };
+    prompt += domains[request.userDomain] || ` Use examples from ${request.userDomain} when possible.`;
   }
-
-  prompt += ` Structure your explanation clearly. Be helpful and encouraging.`;
 
   return prompt;
 }
