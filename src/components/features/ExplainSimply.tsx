@@ -5,35 +5,42 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, Sparkles, BookOpen, Loader2 } from "lucide-react";
+import { Lightbulb, Sparkles, BookOpen, Loader2, Zap, Layers, MessageCircle, GraduationCap, RotateCcw, Plus, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface ExplainOption {
   id: string;
   label: string;
   description: string;
-  prompt: string;
+  icon: React.ReactNode;
 }
 
 const explainOptions: ExplainOption[] = [
   {
     id: "new",
     label: "Explain like I'm new to this",
-    description: "Simple, beginner-friendly explanation",
-    prompt: "Explain this concept as if I'm completely new to the topic. Use simple language and avoid jargon.",
+    description: "Simple, beginner-friendly explanation with no assumptions",
+    icon: <GraduationCap className="h-4 w-4" />,
+  },
+  {
+    id: "analogy",
+    label: "Use real-world analogies",
+    description: "Learn through familiar comparisons and scenarios",
+    icon: <Lightbulb className="h-4 w-4" />,
   },
   {
     id: "minimal",
-    label: "Minimal technical terms",
-    description: "Keep it accessible and clear",
-    prompt: "Explain this with minimal technical terms. Focus on the core idea in plain language.",
+    label: "Avoid technical jargon",
+    description: "Plain language explanation, no specialized terms",
+    icon: <MessageCircle className="h-4 w-4" />,
   },
   {
-    id: "examples",
-    label: "Real-world examples",
-    description: "Learn through practical scenarios",
-    prompt: "Explain this concept using real-world examples and analogies that make it easy to understand.",
+    id: "technical",
+    label: "Increase technical depth",
+    description: "Detailed, comprehensive explanation with precise terminology",
+    icon: <Layers className="h-4 w-4" />,
   },
 ];
 
@@ -55,6 +62,27 @@ export function ExplainSimply({
   const [adaptToBackground, setAdaptToBackground] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Get friendly labels for user profile
+  const getKnowledgeLevelLabel = (level: string) => {
+    switch (level) {
+      case "beginner": return "Beginner";
+      case "intermediate": return "Intermediate";
+      case "advanced": return "Advanced";
+      case "expert": return "Expert";
+      default: return level;
+    }
+  };
+
+  const getDomainLabel = (domain: string) => {
+    switch (domain) {
+      case "studying": return "Student";
+      case "programming": return "Developer";
+      case "general": return "General";
+      default: return domain;
+    }
+  };
 
   const streamExplanation = async (action: "explain" | "simpler" | "examples" = "explain") => {
     if (!topic.trim() || !selectedOption) return;
@@ -83,6 +111,12 @@ export function ExplainSimply({
       });
 
       if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Rate limit exceeded. Please try again in a moment.");
+        }
+        if (response.status === 402) {
+          throw new Error("AI credits exhausted. Please add credits to continue.");
+        }
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || "Failed to get explanation");
       }
@@ -146,93 +180,118 @@ export function ExplainSimply({
     setExplanation(null);
   };
 
+  const getSelectedOptionLabel = () => {
+    return explainOptions.find((o) => o.id === selectedOption)?.label || "";
+  };
+
   return (
     <Card className="border-border/50">
       <CardHeader className="pb-4">
-        <div className="flex items-center gap-2">
-          <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Lightbulb className="h-5 w-5 text-primary" />
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+            <Zap className="h-5 w-5 text-primary" />
           </div>
           <div>
-            <CardTitle className="text-base">Explain It Simply</CardTitle>
-            <CardDescription className="text-xs">Get clear explanations adapted to your level</CardDescription>
+            <CardTitle className="text-lg">Explain It Simply</CardTitle>
+            <CardDescription className="text-sm">Get clear explanations adapted to your level</CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         {!explanation ? (
           <>
             {/* Topic Input */}
             <div className="space-y-2">
-              <Label htmlFor="topic" className="text-sm">What would you like explained?</Label>
+              <Label htmlFor="topic" className="text-sm font-medium">What would you like explained?</Label>
               <Textarea
                 id="topic"
-                placeholder="Enter a topic, concept, or question..."
+                placeholder="Enter any topic, concept, term, or question..."
                 value={topic}
                 onChange={(e) => setTopic(e.target.value)}
-                className="resize-none h-20"
+                className="resize-none h-24 text-base"
               />
             </div>
 
             {/* Explanation Style Options */}
-            <div className="space-y-2">
-              <Label className="text-sm">Choose explanation style</Label>
+            <div className="space-y-3">
+              <Label className="text-sm font-medium">How should I explain it?</Label>
               <div className="grid gap-2">
                 {explainOptions.map((option) => (
                   <button
                     key={option.id}
                     onClick={() => setSelectedOption(option.id)}
                     className={cn(
-                      "flex items-start gap-3 p-3 rounded-lg border text-left transition-all",
+                      "flex items-start gap-3 p-3 rounded-xl border text-left transition-all",
                       selectedOption === option.id
-                        ? "border-primary bg-primary/5"
-                        : "border-border hover:border-primary/50"
+                        ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                        : "border-border hover:border-primary/50 hover:bg-muted/50"
                     )}
                   >
                     <div className={cn(
-                      "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                      "h-9 w-9 rounded-lg flex items-center justify-center shrink-0 transition-colors",
                       selectedOption === option.id
                         ? "bg-primary text-primary-foreground"
-                        : "bg-muted"
+                        : "bg-muted text-muted-foreground"
                     )}>
-                      {option.id === "new" && <BookOpen className="h-4 w-4" />}
-                      {option.id === "minimal" && <Sparkles className="h-4 w-4" />}
-                      {option.id === "examples" && <Lightbulb className="h-4 w-4" />}
+                      {option.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-sm">{option.label}</p>
-                      <p className="text-xs text-muted-foreground">{option.description}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{option.description}</p>
                     </div>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Adapt Toggle */}
-            <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="adapt"
-                  checked={adaptToBackground}
-                  onCheckedChange={setAdaptToBackground}
-                />
-                <Label htmlFor="adapt" className="text-sm cursor-pointer">
-                  Adjust explanation to my background
-                </Label>
-              </div>
-              {adaptToBackground && (
-                <div className="flex gap-1">
-                  <Badge variant="secondary" className="text-xs">{userKnowledgeLevel}</Badge>
-                  <Badge variant="secondary" className="text-xs">{userDomain}</Badge>
+            {/* Personalization Section */}
+            <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
+              <CollapsibleTrigger asChild>
+                <button className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors w-full justify-between p-3 rounded-lg bg-muted/30 hover:bg-muted/50">
+                  <span className="flex items-center gap-2">
+                    <Sparkles className="h-4 w-4" />
+                    Personalization settings
+                  </span>
+                  <ChevronDown className={cn("h-4 w-4 transition-transform", showAdvanced && "rotate-180")} />
+                </button>
+              </CollapsibleTrigger>
+              <CollapsibleContent className="pt-3">
+                <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50 border border-border/50">
+                  <div className="flex flex-col gap-1">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        id="adapt"
+                        checked={adaptToBackground}
+                        onCheckedChange={setAdaptToBackground}
+                      />
+                      <Label htmlFor="adapt" className="text-sm font-medium cursor-pointer">
+                        Adapt to my background
+                      </Label>
+                    </div>
+                    <p className="text-xs text-muted-foreground ml-11">
+                      Customize explanation based on your profile settings
+                    </p>
+                  </div>
+                  {adaptToBackground && (
+                    <div className="flex gap-1.5">
+                      <Badge variant="secondary" className="text-xs">
+                        {getKnowledgeLevelLabel(userKnowledgeLevel)}
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs">
+                        {getDomainLabel(userDomain)}
+                      </Badge>
+                    </div>
+                  )}
                 </div>
-              )}
-            </div>
+              </CollapsibleContent>
+            </Collapsible>
 
             {/* Explain Button */}
             <Button
               onClick={handleExplain}
               disabled={!topic.trim() || !selectedOption || isLoading}
-              className="w-full"
+              className="w-full h-11 text-base"
+              size="lg"
             >
               {isLoading ? (
                 <>
@@ -250,27 +309,82 @@ export function ExplainSimply({
         ) : (
           <>
             {/* Explanation Result */}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">{topic}</Badge>
-                <Badge variant="outline">
-                  {explainOptions.find((o) => o.id === selectedOption)?.label}
+            <div className="space-y-4">
+              {/* Topic and style badges */}
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="bg-primary/10 text-primary border-primary/20">
+                  <BookOpen className="h-3 w-3 mr-1" />
+                  {topic.length > 40 ? topic.substring(0, 40) + "..." : topic}
                 </Badge>
+                <Badge variant="outline" className="text-xs">
+                  {getSelectedOptionLabel()}
+                </Badge>
+                {adaptToBackground && (
+                  <Badge variant="secondary" className="text-xs">
+                    Personalized
+                  </Badge>
+                )}
               </div>
-              <div className="p-4 rounded-xl bg-muted/50 text-sm leading-relaxed whitespace-pre-wrap">
-                {explanation}
-                {isLoading && <span className="inline-block w-2 h-4 bg-primary/50 animate-pulse ml-1" />}
+              
+              {/* Explanation content */}
+              <div className="p-5 rounded-xl bg-muted/30 border border-border/50">
+                <div className="prose prose-sm dark:prose-invert max-w-none">
+                  <div className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {explanation}
+                    {isLoading && (
+                      <span className="inline-block w-2 h-4 bg-primary/50 animate-pulse ml-1 rounded-sm" />
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={handleReset} className="flex-1" disabled={isLoading}>
-                  New Explanation
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleSimpler} className="flex-1" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Make Simpler"}
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleMoreExamples} className="flex-1" disabled={isLoading}>
-                  {isLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : "Add Examples"}
-                </Button>
+              
+              {/* Action buttons */}
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">Refine the explanation:</p>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleSimpler} 
+                    disabled={isLoading}
+                    className="flex-1 min-w-[120px]"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <>
+                        <Zap className="h-3 w-3 mr-1.5" />
+                        Make Simpler
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleMoreExamples} 
+                    disabled={isLoading}
+                    className="flex-1 min-w-[120px]"
+                  >
+                    {isLoading ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="h-3 w-3 mr-1.5" />
+                        Add Examples
+                      </>
+                    )}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleReset} 
+                    disabled={isLoading}
+                    className="flex-1 min-w-[120px]"
+                  >
+                    <RotateCcw className="h-3 w-3 mr-1.5" />
+                    New Topic
+                  </Button>
+                </div>
               </div>
             </div>
           </>
