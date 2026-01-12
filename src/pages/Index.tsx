@@ -53,6 +53,12 @@ const Index = () => {
             messages={messages}
             onSendMessage={sendMessage}
             isLoading={isLoading}
+            userPreferences={{
+              knowledgeLevel: profile?.knowledge_level || undefined,
+              explanationStyle: profile?.explanation_style || undefined,
+              responseLength: profile?.response_length || undefined,
+              primaryPurpose: profile?.primary_purpose || undefined,
+            }}
           />
         );
     }

@@ -40,7 +40,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   };
 
   return (
-    <div className="border-t border-border bg-background p-4">
+    <div className="border-t border-border bg-background/95 backdrop-blur-sm p-4">
       <div className="max-w-4xl mx-auto space-y-3">
         {/* Quick action buttons */}
         <div className="flex flex-wrap gap-2">
@@ -49,7 +49,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
               key={action.label}
               onClick={() => onSend(action.prompt)}
               disabled={disabled}
-              className="text-xs px-3 py-1.5 rounded-full border border-border bg-surface hover:bg-surface-hover text-foreground transition-colors disabled:opacity-50"
+              className="text-xs px-3 py-1.5 rounded-full border border-border bg-background hover:bg-muted hover:border-primary/30 text-muted-foreground hover:text-foreground transition-all duration-200 disabled:opacity-50 font-medium"
             >
               {action.label}
             </button>
@@ -64,7 +64,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Ask anything about your studies, tasks, or schedule..."
-              className="min-h-[52px] max-h-[200px] resize-none pr-12 rounded-xl border-border bg-surface focus-visible:ring-primary"
+              className="min-h-[52px] max-h-[200px] resize-none pr-12 rounded-xl border-border bg-background focus-visible:ring-primary shadow-soft"
               rows={1}
               disabled={disabled}
             />
@@ -72,7 +72,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleMicClick}
-                  className={`absolute right-3 bottom-3 p-1.5 rounded-lg transition-colors ${
+                  className={`absolute right-3 bottom-3 p-1.5 rounded-lg transition-all duration-200 ${
                     isListening 
                       ? "bg-primary text-primary-foreground animate-pulse" 
                       : "text-muted-foreground hover:text-foreground hover:bg-muted"
@@ -90,14 +90,14 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
             onClick={handleSend}
             disabled={!message.trim() || disabled}
             size="icon"
-            className="h-[52px] w-[52px] rounded-xl shrink-0"
+            className="h-[52px] w-[52px] rounded-xl shrink-0 shadow-soft"
           >
             <Send className="h-5 w-5" />
           </Button>
         </div>
         
-        <p className="text-xs text-muted-foreground text-center">
-          Press Enter to send • Shift + Enter for new line • Click mic for voice
+        <p className="text-[11px] text-muted-foreground text-center">
+          Press Enter to send • Shift + Enter for new line
         </p>
       </div>
     </div>
