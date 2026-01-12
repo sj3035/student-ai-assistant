@@ -32,8 +32,8 @@ export function Header({ onMenuClick }: HeaderProps) {
             className="h-9 w-9 object-contain"
           />
           <div className="flex flex-col">
-            <span className="font-bold text-foreground tracking-tight">MindForge</span>
-            <span className="text-[10px] text-muted-foreground font-medium tracking-wide">Think. Build. Evolve.</span>
+            <span className="font-orbitron font-bold text-foreground tracking-wider text-lg uppercase">MindForge</span>
+            <span className="font-orbitron text-[9px] text-muted-foreground font-medium tracking-[0.2em] uppercase">Think. Build. Evolve.</span>
           </div>
         </div>
       </div>

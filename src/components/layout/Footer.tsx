@@ -11,9 +11,9 @@ export function Footer() {
             className="h-7 w-7 object-contain"
           />
           <div className="flex items-center gap-2">
-            <span className="font-bold text-foreground text-sm">MindForge</span>
+            <span className="font-orbitron font-bold text-foreground text-sm tracking-wider uppercase">MindForge</span>
             <span className="text-xs text-muted-foreground hidden sm:inline">•</span>
-            <span className="text-xs text-muted-foreground hidden sm:inline">Think. Build. Evolve.</span>
+            <span className="font-orbitron text-[10px] text-muted-foreground hidden sm:inline tracking-[0.15em] uppercase">Think. Build. Evolve.</span>
           </div>
         </div>
         
